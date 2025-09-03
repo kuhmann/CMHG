@@ -24,7 +24,15 @@ export const SOCIALS: Socials = [
   },
   {
     NAME: "Discord",
-    HREF: "https://discordapp.com/invite/Ya9zEdk",
+    HREF: "https://discord.gg/mousehunt",
+  },
+  {
+    NAME: "Reddit",
+    HREF: "https://www.reddit.com/r/mousehunt/",
+  },
+  {
+    NAME: "Forum",
+    HREF: "https://www.mousehuntgame.com/forum",
   },
   {
     NAME: "GitHub",
