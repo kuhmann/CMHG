@@ -8,7 +8,6 @@ import BackToPrevious from "@components/BackToPrevious.astro";
 import PostNavigation from "@components/PostNavigation.astro";
 import TableOfContents from "@components/TableOfContents.astro";
 
-
 export async function getStaticPaths() {
   const posts = (await getCollection("guide"))
     .filter((post) => !post.data.draft)
@@ -24,30 +23,121 @@ const posts = (await getCollection("guide"))
   .filter((post) => !post.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-function getNextPost() {
-  let postIndex;
-  for (const post of posts) {
-    if (post.id === Astro.params.id) {
-      postIndex = posts.indexOf(post);
-      return posts[postIndex + 1];
+// Hardcoded navigation flow based on your guide structure
+function getNextPost(currentPost: CollectionEntry<"guide">) {
+  const currentRank = currentPost.data.rank;
+  const currentArea = currentPost.data.area;
+  
+  // Handle special case for Master rank with multiple areas
+  if (currentRank === "Master") {
+    if (currentArea === "Training Grounds") {
+      return posts.find(post => 
+        post.data.rank === "Master" && 
+        post.data.area === "Laboratory & Mousoleum"
+      );
+    } else if (currentArea === "Laboratory & Mousoleum") {
+      return posts.find(post => 
+        post.data.rank === "Master" && 
+        post.data.area === "Calm Clearing & Great Gnarled Tree"
+      );
+    } else if (currentArea === "Calm Clearing & Great Gnarled Tree") {
+      return posts.find(post => 
+        post.data.rank === "Grandmaster"
+      );
     }
   }
+  
+  // Define the progression flow for other ranks
+  const progressionFlow = {
+    "Novice": { rank: "Recruit", area: "Town of Gnawnia" },
+    "Recruit": { rank: "Apprentice", area: "Windmill" },
+    "Apprentice": { rank: "Initiate", area: "Harbour" },
+    "Initiate": { rank: "Journeyman", area: "Mountain" },
+    "Journeyman": { rank: "Master", area: "Training Grounds" },
+    "Grandmaster": { rank: "Legendary", area: "Catacombs" },
+    "Legendary": { rank: "Hero", area: "Mousoleum" },
+    "Hero": { rank: "Knight", area: "Great Gnarled Tree" },
+    "Knight": { rank: "Lord", area: "Cape Clawed" },
+    "Lord": { rank: "Baron", area: "Bazaar" },
+    "Baron": { rank: "Count", area: "Derr Dunes" },
+    "Count": { rank: "Duke", area: "Nerg Plains" },
+    "Duke": { rank: "Grand Duke", area: "Living Garden" },
+    "Grand Duke": { rank: "Archduke", area: "Seasonal Garden" },
+    "Archduke": { rank: "Viceroy", area: "Forbidden Grove" },
+    "Viceroy": { rank: "Elder", area: "Fiery Warpath" },
+    "Elder": { rank: "Sage", area: "Zugzwang's Tower" },
+    "Sage": { rank: "Fabled", area: "Acolyte Realm" }
+  };
+  
+  const nextStep = progressionFlow[currentRank as keyof typeof progressionFlow];
+  if (!nextStep) return null;
+  
+  // Find the post with the next rank and area
+  return posts.find(post => 
+    post.data.rank === nextStep.rank && 
+    post.data.area === nextStep.area
+  );
 }
 
-function getPrevPost() {
-  let postIndex;
-  for (const post of posts) {
-    if (post.id === Astro.params.id) {
-      postIndex = posts.indexOf(post);
-      return posts[postIndex - 1];
+function getPrevPost(currentPost: CollectionEntry<"guide">) {
+  const currentRank = currentPost.data.rank;
+  const currentArea = currentPost.data.area;
+  
+  // Handle special case for Master rank with multiple areas
+  if (currentRank === "Master") {
+    if (currentArea === "Calm Clearing & Great Gnarled Tree") {
+      return posts.find(post => 
+        post.data.rank === "Master" && 
+        post.data.area === "Laboratory & Mousoleum"
+      );
+    } else if (currentArea === "Laboratory & Mousoleum") {
+      return posts.find(post => 
+        post.data.rank === "Master" && 
+        post.data.area === "Training Grounds"
+      );
+    } else if (currentArea === "Training Grounds") {
+      return posts.find(post => 
+        post.data.rank === "Journeyman"
+      );
     }
   }
+  
+  // Define the reverse progression flow for other ranks
+  const reverseProgressionFlow = {
+    "Recruit": { rank: "Novice", area: "Meadow" },
+    "Apprentice": { rank: "Recruit", area: "Town of Gnawnia" },
+    "Initiate": { rank: "Apprentice", area: "Windmill" },
+    "Journeyman": { rank: "Initiate", area: "Harbour" },
+    "Grandmaster": { rank: "Master", area: "Calm Clearing & Great Gnarled Tree" },
+    "Legendary": { rank: "Grandmaster", area: "Laboratory & Mousoleum" },
+    "Hero": { rank: "Legendary", area: "Catacombs" },
+    "Knight": { rank: "Hero", area: "Mousoleum" },
+    "Lord": { rank: "Knight", area: "Great Gnarled Tree" },
+    "Baron": { rank: "Lord", area: "Cape Clawed" },
+    "Count": { rank: "Baron", area: "Bazaar" },
+    "Duke": { rank: "Count", area: "Derr Dunes" },
+    "Grand Duke": { rank: "Duke", area: "Nerg Plains" },
+    "Archduke": { rank: "Grand Duke", area: "Living Garden" },
+    "Viceroy": { rank: "Archduke", area: "Seasonal Garden" },
+    "Elder": { rank: "Viceroy", area: "Forbidden Grove" },
+    "Sage": { rank: "Elder", area: "Fiery Warpath" },
+    "Fabled": { rank: "Sage", area: "Zugzwang's Tower" }
+  };
+  
+  const prevStep = reverseProgressionFlow[currentRank as keyof typeof reverseProgressionFlow];
+  if (!prevStep) return null;
+  
+  // Find the post with the previous rank and area
+  return posts.find(post => 
+    post.data.rank === prevStep.rank && 
+    post.data.area === prevStep.area
+  );
 }
-
-const nextPost = getNextPost();
-const prevPost = getPrevPost();
 
 const post = Astro.props;
+const nextPost = getNextPost(post);
+const prevPost = getPrevPost(post);
+
 const { Content, headings } = await render(post);
 ---
 
@@ -92,7 +182,6 @@ const { Content, headings } = await render(post);
       <div class="mt-24">
         <PostNavigation prevPost={prevPost} nextPost={nextPost} />
       </div>
-
     </article>
   </Container>
 </Layout>

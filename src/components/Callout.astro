@@ -1,8 +1,9 @@
 ---
 interface Props {
   type?: "default" | "info" | "warning" | "error";
+  title?: string;
 }
-const { type = "default" } = Astro.props;
+const { type = "default", title } = Astro.props;
 let emoji = "💡";
 if (type === "info") {
   emoji = "ℹ️";
@@ -24,7 +25,10 @@ const typeClasses = {
 };
 ---
 
-<div class:list={["not-prose", baseClasses, typeClasses[type]]}>
-  <span class="pointer-events-none pr-3 text-xl select-none">{emoji}</span>
-  <slot />
+<div class:list={[baseClasses, typeClasses[type]]}>
+  <span class="pointer-events-none pr-3 text-xl select-none flex-shrink-0">{emoji}</span>
+  <div class="flex-1">
+    {title && <h4 class="font-semibold mb-2 mt-0">{title}</h3>}
+    <slot />
+  </div>
 </div>
