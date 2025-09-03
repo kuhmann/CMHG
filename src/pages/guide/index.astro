@@ -69,7 +69,26 @@ const ranks = Object.keys(posts).sort((a, b) =>
             <section class="animate space-y-6">
               <div class="border-b border-black/15 dark:border-white/20 pb-2">
               <h2 class="text-2xl font-bold text-black dark:text-white">
-                   {rank === "Viceroy" ? `${rank} +` : rank}
+                   {(() => {
+                     const rankDisplay = {
+                       "Viceroy": `${rank} +`,
+                       "Archduke": "Archduke/Archduchess",
+                       "Archduchess": "Archduke/Archduchess",
+                       "Grand Duke": "Grand Duke/Grand Duchess",
+                       "Grand Duchess": "Grand Duke/Grand Duchess",
+                       "Duke": "Duke/Duchess",
+                       "Duchess": "Duke/Duchess",
+                       "Count": "Count/Countess",
+                       "Countess": "Count/Countess",
+                       "Baron": "Baron/Baroness",
+                       "Baroness": "Baron/Baroness",
+                       "Lord": "Lord/Lady",
+                       "Lady": "Lord/Lady",
+                       "Journeyman": "Journeyman/Journeywoman",
+                       "Journeywoman": "Journeyman/Journeywoman"
+                     };
+                     return rankDisplay[rank as keyof typeof rankDisplay] || rank;
+                   })()}
                  </h2>
               </div>
               
