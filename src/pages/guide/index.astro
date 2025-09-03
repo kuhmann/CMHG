@@ -5,50 +5,93 @@ import Container from "@components/Container.astro";
 import ArrowCard from "@components/ArrowCard.astro";
 import { GUIDE } from "@consts";
 
+// Define rank order for proper sorting (lowest to highest)
+const rankOrder = [
+  "Novice", "Recruit", "Apprentice", "Initiate", "Journeyman", "Journeywoman",
+  "Master", "Grandmaster", "Legendary", "Hero", "Knight", "Lord", "Lady",
+  "Baron", "Baroness", "Count", "Countess", "Duke", "Duchess", 
+  "Grand Duke", "Grand Duchess", "Archduke", "Archduchess", "Viceroy", 
+  "Elder", "Sage", "Fabled"
+];
+
 const data = (await getCollection("guide"))
   .filter((post) => !post.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  .sort((a, b) => {
+    // First sort by rank order
+    const rankDiff = rankOrder.indexOf(a.data.rank) - rankOrder.indexOf(b.data.rank);
+    if (rankDiff !== 0) return rankDiff;
+    
+    // Then by area
+    if (a.data.area !== b.data.area) {
+      return a.data.area.localeCompare(b.data.area);
+    }
+    
+    // Finally by custom order if specified
+    if (a.data.order && b.data.order) {
+      return a.data.order - b.data.order;
+    }
+    
+    return 0;
+  });
 
-type Acc = {
-  [year: string]: CollectionEntry<"guide">[];
+type RankGroup = {
+  [rank: string]: {
+    [area: string]: CollectionEntry<"guide">[];
+  };
 };
 
-const posts = data.reduce((acc: Acc, post) => {
-  const year = post.data.date.getFullYear().toString();
-  if (!acc[year]) {
-    acc[year] = [];
+const posts = data.reduce((acc: RankGroup, post) => {
+  const { rank, area } = post.data;
+  
+  if (!acc[rank]) {
+    acc[rank] = {};
   }
-  acc[year].push(post);
+  
+  if (!acc[rank][area]) {
+    acc[rank][area] = [];
+  }
+  
+  acc[rank][area].push(post);
   return acc;
 }, {});
 
-const years = Object.keys(posts).sort((a, b) => parseInt(b) - parseInt(a));
+const ranks = Object.keys(posts).sort((a, b) => 
+  rankOrder.indexOf(b) - rankOrder.indexOf(a)
+);
 ---
 
 <Layout title={GUIDE.TITLE} description={GUIDE.DESCRIPTION}>
   <Container>
     <aside data-pagefind-ignore>
-      <div class="space-y-10">
-        <div class="space-y-4">
-          {
-            years.map((year) => (
-              <section class="animate space-y-4">
-                <div class="font-semibold text-black dark:text-white">
-                  {year}
-                </div>
-                <div>
-                  <ul class="not-prose flex flex-col gap-4">
-                    {posts[year].map((post) => (
-                      <li>
-                        <ArrowCard entry={post} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </section>
-            ))
-          }
-        </div>
+      <div class="space-y-12">
+        {
+          ranks.map((rank) => (
+            <section class="animate space-y-6">
+              <div class="border-b border-black/15 dark:border-white/20 pb-2">
+              <h2 class="text-2xl font-bold text-black dark:text-white">
+                   {rank === "Viceroy" ? `${rank} +` : rank}
+                 </h2>
+              </div>
+              
+              <div class="space-y-8">
+                {Object.entries(posts[rank]).map(([area, areaPosts]) => (
+                  <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-black dark:text-white">
+                      {area}
+                    </h3>
+                    <ul class="not-prose flex flex-col gap-4">
+                      {areaPosts.map((post) => (
+                        <li>
+                          <ArrowCard entry={post} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))
+        }
       </div>
     </aside>
   </Container>

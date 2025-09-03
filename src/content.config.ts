@@ -9,6 +9,15 @@ const guide = defineCollection({
     date: z.coerce.date(),
     draft: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
+    rank: z.enum([
+      "Novice", "Recruit", "Apprentice", "Initiate", "Journeyman", "Journeywoman",
+      "Master", "Grandmaster", "Legendary", "Hero", "Knight", "Lord", "Lady",
+      "Baron", "Baroness", "Count", "Countess", "Duke", "Duchess", 
+      "Grand Duke", "Grand Duchess", "Archduke", "Archduchess", "Viceroy", 
+      "Elder", "Sage", "Fabled"
+    ]),
+    area: z.string(),
+    order: z.number().optional(), // For custom ordering within areas
   }),
 });
 
